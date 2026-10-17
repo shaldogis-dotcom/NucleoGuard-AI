@@ -63,69 +63,50 @@ else:
             st.stop()
 
 enhanced = gaussian_filter(noisy, sigma=sigma)
+
 change_map = np.abs(noisy - enhanced)
 
-st.header("Image comparison")
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+# تحديد أعلى مستوى للتغير لعرض الخريطة بوضوح
+vmax = max(float(np.percentile(change_map, 99)), 1e-6)
+
+# تحديد المناطق ذات التغير الأعلى
+threshold = float(np.percentile(change_map, 95))
+high_change = change_map >= threshold
+
+st.header("Image comparison and change detection")
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
 axes[0].imshow(noisy, cmap="gray", vmin=0, vmax=1)
-axes[0].set_title("Before")
+axes[0].set_title("Before denoising")
+
 axes[1].imshow(enhanced, cmap="gray", vmin=0, vmax=1)
-axes[1].set_title("After")
-axes[2].imshow(change_map, cmap="hot")
-axes[2].set_title("Change map")
+axes[1].set_title("After denoising")
+
+heatmap = axes[2].imshow(
+    change_map,
+    cmap="hot",
+    vmin=0,
+    vmax=vmax
+)
+axes[2].contour(
+    high_change.astype(float),
+    levels=[0.5],
+    colors="cyan",
+    linewidths=0.7
+)
+axes[2].set_title("Change map — top 5%")
+fig.colorbar(heatmap, ax=axes[2], fraction=0.046, pad=0.04,
+             label="Absolute intensity change")
+
 for ax in axes:
     ax.axis("off")
+
 fig.tight_layout()
 st.pyplot(fig)
 plt.close(fig)
 
-st.header("Quality metrics")
-
-if reference is not None:
-    mae1, mse1, psnr1 = calculate_metrics(reference, noisy)
-    mae2, mse2, psnr2 = calculate_metrics(reference, enhanced)
-
-    st.table({
-        "Metric": ["MAE", "MSE", "PSNR (dB)"],
-        "Before": [round(mae1, 5), round(mse1, 5), round(psnr1, 2)],
-        "After": [round(mae2, 5), round(mse2, 5), round(psnr2, 2)]
-    })
-else:
-    st.info("Upload a matching reference image to calculate MAE, MSE and PSNR.")
-
-st.header("ROI measurement")
-h, w = noisy.shape
-cx = st.slider("ROI center X", 0, w-1, w//2)
-cy = st.slider("ROI center Y", 0, h-1, h//2)
-radius = st.slider("ROI radius", 3, max(3, min(h, w)//4), 12)
-
-yy, xx = np.ogrid[:h, :w]
-roi = (xx-cx)**2 + (yy-cy)**2 <= radius**2
-before = float(noisy[roi].mean())
-after = float(enhanced[roi].mean())
-change = 100 * abs(after-before) / max(abs(before), 1e-12)
-
-c1, c2, c3 = st.columns(3)
-c1.metric("Mean before", f"{before:.4f}")
-c2.metric("Mean after", f"{after:.4f}")
-c3.metric("Relative change", f"{change:.2f}%")
-
-limit = st.sidebar.slider("Demo alert threshold (%)", 1.0, 20.0, 5.0)
-if change > limit:
-    st.warning("Review suggested: ROI measurement changed above demo threshold.")
-else:
-    st.info("No alert under the selected demo threshold.")
-
-buffer = io.BytesIO()
-plt.imsave(buffer, enhanced, cmap="gray", vmin=0, vmax=1, format="png")
-st.download_button(
-    "Download enhanced image",
-    data=buffer.getvalue(),
-    file_name="nucleoguard_enhanced.png",
-    mime="image/png"
-)
-
 st.caption(
-    "Experimental prototype only. Change maps are not calibrated uncertainty "
-    "maps. ROI intensity is not clinical SUV. Not for diagnosis or patient care."
+    "Cyan outlines mark pixels in the highest 5% of observed changes. "
+    "This is a relative change indicator, not a calibrated uncertainty map."
 )
