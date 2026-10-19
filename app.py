@@ -63,7 +63,8 @@ else:
             st.stop()
 
 enhanced = gaussian_filter(noisy, sigma=sigma)
-
+st.write("Current denoising strength:", sigma)
+st.write("Image difference:", float(np.mean(np.abs(noisy - enhanced))))
 change_map = np.abs(noisy - enhanced)
 
 # تحديد أعلى مستوى للتغير لعرض الخريطة بوضوح
