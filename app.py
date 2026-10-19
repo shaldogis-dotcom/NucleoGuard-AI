@@ -74,6 +74,101 @@ vmax = max(float(np.percentile(change_map, 99)), 1e-6)
 threshold = float(np.percentile(change_map, 95))
 high_change = change_map >= threshold
 
+st.header("ROI Analysis")
+
+st.write(
+    "Select a square region of interest (ROI) "
+    "to compare image intensity before and after denoising."
+)
+
+height, width = noisy.shape
+
+col1, col2 = st.columns(2)
+
+with col1:
+    roi_x = st.slider(
+        "ROI horizontal position",
+        min_value=0,
+        max_value=max(0, width - 1),
+        value=width // 2
+    )
+
+with col2:
+    roi_y = st.slider(
+        "ROI vertical position",
+        min_value=0,
+        max_value=max(0, height - 1),
+        value=height // 2
+    )
+
+roi_size = min(20, height, width)
+
+x_start = min(max(0, roi_x - roi_size // 2), width - roi_size)
+y_start = min(max(0, roi_y - roi_size // 2), height - roi_size)
+
+roi_before = noisy[
+    y_start:y_start + roi_size,
+    x_start:x_start + roi_size
+]
+
+roi_after = enhanced[
+    y_start:y_start + roi_size,
+    x_start:x_start + roi_size
+]
+
+before_mean = float(np.mean(roi_before))
+after_mean = float(np.mean(roi_after))
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("ROI size", f"{roi_size} × {roi_size}")
+col2.metric("Mean before", f"{before_mean:.4f}")
+col3.metric(
+    "Mean after",
+    f"{after_mean:.4f}",
+    delta=f"{after_mean - before_mean:+.4f}"
+)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+axes[0].imshow(noisy, cmap="gray", vmin=0, vmax=1)
+axes[0].add_patch(
+    plt.Rectangle(
+        (x_start, y_start),
+        roi_size,
+        roi_size,
+        fill=False,
+        edgecolor="red",
+        linewidth=2
+    )
+)
+axes[0].set_title("ROI before denoising")
+
+axes[1].imshow(enhanced, cmap="gray", vmin=0, vmax=1)
+axes[1].add_patch(
+    plt.Rectangle(
+        (x_start, y_start),
+        roi_size,
+        roi_size,
+        fill=False,
+        edgecolor="red",
+        linewidth=2
+    )
+)
+axes[1].set_title("ROI after denoising")
+
+for ax in axes:
+    ax.axis("off")
+
+fig.tight_layout()
+st.pyplot(fig)
+plt.close(fig)
+
+st.caption(
+    "ROI mean intensity is an experimental comparison only. "
+    "It is not an SUV measurement or a validated diagnostic metric."
+)
+
 st.header("Image comparison and change detection")
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
