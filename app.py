@@ -196,15 +196,18 @@ review_limit = st.slider(
     step=1
 )
 
+
+st.write("Debug — ROI change:", f"{roi_change_percent:.4f}%")
+st.write("Debug — Review threshold:", f"{review_limit}%")
+
 if roi_change_percent >= review_limit:
     st.warning(
-        "Review recommended: the ROI mean intensity changed "
-        "beyond the selected threshold."
+        "Review recommended: ROI mean intensity change "
+        "meets or exceeds the selected threshold."
     )
 else:
     st.info(
-        "The ROI mean change is below the selected threshold. "
-        "This does not guarantee preservation of diagnostic details."
+        "ROI mean intensity change is below the selected threshold."
     )
 
 st.caption(
