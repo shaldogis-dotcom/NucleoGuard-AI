@@ -169,6 +169,49 @@ st.caption(
     "It is not an SUV measurement or a validated diagnostic metric."
 )
 
+st.subheader("ROI Preservation Review")
+
+roi_change = abs(after_mean - before_mean)
+
+if abs(before_mean) > 1e-6:
+    roi_change_percent = (roi_change / abs(before_mean)) * 100
+else:
+    roi_change_percent = 0.0
+
+st.metric(
+    "Absolute ROI mean change",
+    f"{roi_change:.4f}"
+)
+
+st.metric(
+    "Relative ROI mean change",
+    f"{roi_change_percent:.2f}%"
+)
+
+review_limit = st.slider(
+    "ROI change review threshold (%)",
+    min_value=1,
+    max_value=50,
+    value=10,
+    step=1
+)
+
+if roi_change_percent >= review_limit:
+    st.warning(
+        "Review recommended: the ROI mean intensity changed "
+        "beyond the selected threshold."
+    )
+else:
+    st.info(
+        "The ROI mean change is below the selected threshold. "
+        "This does not guarantee preservation of diagnostic details."
+    )
+
+st.caption(
+    "Experimental screening indicator only. "
+    "The threshold is user-defined and is not clinically validated."
+)
+
 st.header("Image comparison and change detection")
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
