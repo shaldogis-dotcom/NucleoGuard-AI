@@ -110,3 +110,50 @@ st.caption(
     "Cyan outlines mark pixels in the highest 5% of observed changes. "
     "This is a relative change indicator, not a calibrated uncertainty map."
 )
+
+st.subheader("Change detection alert")
+
+change_limit = st.slider(
+    "Minimum intensity change",
+    min_value=0.01,
+    max_value=0.50,
+    value=0.10,
+    step=0.01
+)
+
+changed_pixels = change_map > change_limit
+
+change_percentage = (
+    np.count_nonzero(changed_pixels)
+    / changed_pixels.size
+) * 100
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.metric(
+        "Pixels with significant change",
+        f"{change_percentage:.2f}%"
+    )
+
+with col2:
+    st.metric(
+        "Change threshold",
+        f"{change_limit:.2f}"
+    )
+
+if change_percentage >= 10:
+    st.warning(
+        "Review recommended: a considerable portion "
+        "of the image changed during enhancement."
+    )
+else:
+    st.success(
+        "No large-scale change detected at the selected threshold. "
+        "This does not guarantee preservation of all diagnostic details."
+    )
+
+st.caption(
+    "This is an experimental image-change indicator, "
+    "not a validated measure of diagnostic accuracy or uncertainty."
+)
