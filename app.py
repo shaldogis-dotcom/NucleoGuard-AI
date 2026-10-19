@@ -173,10 +173,15 @@ st.subheader("ROI Preservation Review")
 
 roi_change = abs(after_mean - before_mean)
 
-if abs(before_mean) > 1e-6:
-    roi_change_percent = (roi_change / abs(before_mean)) * 100
+
+st.write("ROI change:", f"{roi_change_percent:.4f}%")
+st.write("Selected threshold:", review_limit)
+
+if review_limit < 50:
+    st.warning("TEST: Review alert is active.")
 else:
-    roi_change_percent = 0.0
+    st.info("TEST: Review alert is inactive.")
+
 
 st.metric(
     "Absolute ROI mean change",
