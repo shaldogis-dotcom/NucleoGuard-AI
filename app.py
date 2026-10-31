@@ -57,7 +57,7 @@ if source == "Demo image":
 elif source == "Medical sample images":
     try:
         reference = np.asarray(
-            Image.open("images/pet_sample_1.jpg").convert("L"),
+           Image.open("FBP_Iter_single.jpg") .convert("L"),
             dtype=float
         ) / 255.0
 
