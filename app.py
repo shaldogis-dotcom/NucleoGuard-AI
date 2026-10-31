@@ -37,21 +37,52 @@ def calculate_metrics(ref, candidate):
     return mae, mse, psnr
 
 st.sidebar.header("Settings")
-source = st.sidebar.radio("Image source", ["Demo image", "Upload image"])
-sigma = st.sidebar.slider("Denoising strength", 0.3, 3.0, 1.2, 0.1)
+
+st.sidebar.header("Settings")
+
+source = st.sidebar.radio(
+    "Image source",
+    ["Demo image", "Medical sample images", "Upload image"]
+)
+
+sigma = st.sidebar.slider(
+    "Denoising strength", 0.3, 3.0, 1.2, 0.1
+)
 
 reference = None
 
 if source == "Demo image":
     reference, noisy = create_demo_image()
+
+elif source == "Medical sample images":
+    try:
+        reference = np.asarray(
+            Image.open("images/pet_sample_1.jpg").convert("L"),
+            dtype=float
+        ) / 255.0
+
+        rng = np.random.default_rng(42)
+        noisy = np.clip(
+            reference + rng.normal(0, 0.08, reference.shape),
+            0, 1
+        )
+
+    except FileNotFoundError:
+        st.error("Medical sample image was not found.")
+        st.stop()
+
 else:
     uploaded = st.file_uploader(
         "Upload a grayscale image",
-        type=["png", "jpg", "jpeg", "tif", "tiff"])
+        type=["png", "jpg", "jpeg", "tif", "tiff"]
+    )
+
     if uploaded is None:
         st.info("Upload an image to begin.")
         st.stop()
+
     noisy = load_image(uploaded)
+
 
     ref_file = st.file_uploader(
         "Optional: upload matching reference image",
