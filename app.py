@@ -4,31 +4,51 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.ndimage import gaussian_filter
-import io
 
-st.set_page_config(page_title="NucleoGuard AI", page_icon="🛡️",
-                   layout="wide")
+st.set_page_config(
+    page_title="NucleoGuard AI",
+    page_icon="🛡️",
+    layout="wide"
+)
 
 st.title("🛡️ NucleoGuard AI")
 st.subheader("Nuclear Medicine Image Quality Assistant")
-st.warning("Research prototype only — not validated for clinical diagnosis.")
+st.warning(
+    "Research prototype only — not validated for clinical diagnosis."
+)
+
 
 def create_demo_image(size=256, seed=42):
     y, x = np.mgrid[:size, :size]
+
     image = 0.12 * np.exp(
-        -((x-128)**2 + (y-128)**2) / (2*75**2))
+        -((x - 128)**2 + (y - 128)**2) / (2 * 75**2)
+    )
     image += 0.65 * np.exp(
-        -((x-155)**2 + (y-110)**2) / (2*13**2))
+        -((x - 155)**2 + (y - 110)**2) / (2 * 13**2)
+    )
     image += 0.30 * np.exp(
-        -((x-85)**2 + (y-160)**2) / (2*9**2))
+        -((x - 85)**2 + (y - 160)**2) / (2 * 9**2)
+    )
+
     image /= image.max()
+
     rng = np.random.default_rng(seed)
-    noisy = np.clip(image + rng.normal(0, 0.08, image.shape), 0, 1)
+    noisy = np.clip(
+        image + rng.normal(0, 0.08, image.shape),
+        0, 1
+    )
+
     return image, noisy
 
+
 def load_image(upload):
-    arr = np.asarray(Image.open(upload).convert("L"), dtype=float)
+    arr = np.asarray(
+        Image.open(upload).convert("L"),
+        dtype=float
+    )
     return arr / 255.0
+
 
 def calculate_metrics(ref, candidate):
     mae = np.mean(np.abs(ref - candidate))
@@ -36,7 +56,6 @@ def calculate_metrics(ref, candidate):
     psnr = 10 * np.log10(1.0 / max(mse, 1e-12))
     return mae, mse, psnr
 
-st.sidebar.header("Settings")
 
 st.sidebar.header("Settings")
 
@@ -46,13 +65,13 @@ source = st.sidebar.radio(
 )
 
 sigma = st.sidebar.slider(
-    "Denoising strength", 0.3, 3.0, 1.2, 0.1
+    "Denoising strength",
+    0.3, 3.0, 1.2, 0.1
 )
 
 reference = None
 
 if source == "Demo image":
-    if source == "Demo image":
     reference, noisy = create_demo_image()
 
 elif source == "Medical sample images":
@@ -63,10 +82,11 @@ elif source == "Medical sample images":
         ) / 255.0
 
         rng = np.random.default_rng(42)
-        noise_level = 0.08
 
         noisy = np.clip(
-            reference + rng.normal(0, noise_level, reference.shape),
+            reference + rng.normal(
+                0, 0.08, reference.shape
+            ),
             0, 1
         )
 
@@ -95,37 +115,31 @@ else:
         reference = load_image(ref_file)
 
         if reference.shape != noisy.shape:
-            st.error("Reference and test images must have the same dimensions.")
+            st.error(
+                "Reference and test images must have the same dimensions."
+            )
             st.stop()
 
+# Apply denoising
 enhanced = gaussian_filter(noisy, sigma=sigma)
-        st.info("Upload an image to begin.")
-        st.stop()
 
-    noisy = load_image(uploaded)
-
-
-    ref_file = st.file_uploader(
-        "Optional: upload matching reference image",
-        type=["png", "jpg", "jpeg", "tif", "tiff"])
-    if ref_file is not None:
-        reference = load_image(ref_file)
-        if reference.shape != noisy.shape:
-            st.error("Reference and test images must have the same dimensions.")
-            st.stop()
-
-enhanced = gaussian_filter(noisy, sigma=sigma)
 st.write("Current denoising strength:", sigma)
-st.write("Image difference:", float(np.mean(np.abs(noisy - enhanced))))
+st.write(
+    "Image difference:",
+    float(np.mean(np.abs(noisy - enhanced)))
+)
+
 change_map = np.abs(noisy - enhanced)
 
-# تحديد أعلى مستوى للتغير لعرض الخريطة بوضوح
-vmax = max(float(np.percentile(change_map, 99)), 1e-6)
+vmax = max(
+    float(np.percentile(change_map, 99)),
+    1e-6
+)
 
-# تحديد المناطق ذات التغير الأعلى
 threshold = float(np.percentile(change_map, 95))
 high_change = change_map >= threshold
 
+# ROI Analysis
 st.header("ROI Analysis")
 
 st.write(
@@ -155,8 +169,14 @@ with col2:
 
 roi_size = min(20, height, width)
 
-x_start = min(max(0, roi_x - roi_size // 2), width - roi_size)
-y_start = min(max(0, roi_y - roi_size // 2), height - roi_size)
+x_start = min(
+    max(0, roi_x - roi_size // 2),
+    width - roi_size
+)
+y_start = min(
+    max(0, roi_y - roi_size // 2),
+    height - roi_size
+)
 
 roi_before = noisy[
     y_start:y_start + roi_size,
@@ -221,12 +241,15 @@ st.caption(
     "It is not an SUV measurement or a validated diagnostic metric."
 )
 
+# ROI Preservation Review
 st.subheader("ROI Preservation Review")
 
 roi_change = abs(after_mean - before_mean)
 
 if abs(before_mean) > 1e-6:
-    roi_change_percent = (roi_change / abs(before_mean)) * 100
+    roi_change_percent = (
+        roi_change / abs(before_mean)
+    ) * 100
 else:
     roi_change_percent = 0.0
 
@@ -264,6 +287,7 @@ st.caption(
     "The threshold is user-defined and is not clinically validated."
 )
 
+# Image comparison and change detection
 st.header("Image comparison and change detection")
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -280,15 +304,23 @@ heatmap = axes[2].imshow(
     vmin=0,
     vmax=vmax
 )
+
 axes[2].contour(
     high_change.astype(float),
     levels=[0.5],
     colors="cyan",
     linewidths=0.7
 )
+
 axes[2].set_title("Change map — top 5%")
-fig.colorbar(heatmap, ax=axes[2], fraction=0.046, pad=0.04,
-             label="Absolute intensity change")
+
+fig.colorbar(
+    heatmap,
+    ax=axes[2],
+    fraction=0.046,
+    pad=0.04,
+    label="Absolute intensity change"
+)
 
 for ax in axes:
     ax.axis("off")
@@ -302,6 +334,7 @@ st.caption(
     "This is a relative change indicator, not a calibrated uncertainty map."
 )
 
+# Change detection alert
 st.subheader("Change detection alert")
 
 change_limit = st.slider(
@@ -348,3 +381,22 @@ st.caption(
     "This is an experimental image-change indicator, "
     "not a validated measure of diagnostic accuracy or uncertainty."
 )
+
+# Optional reference-based metrics
+if reference is not None and reference.shape == enhanced.shape:
+    st.header("Reference-based image metrics")
+
+    mae, mse, psnr = calculate_metrics(reference, enhanced)
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("MAE", f"{mae:.4f}")
+    col2.metric("MSE", f"{mse:.6f}")
+    col3.metric("PSNR", f"{psnr:.2f} dB")
+
+    st.caption(
+        "These metrics compare the processed image with the available "
+        "reference image. For the medical sample, the reference is the "
+        "original image and the noisy input is synthetically generated. "
+        "These values are experimental, not clinical validation."
+    )
