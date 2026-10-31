@@ -52,6 +52,7 @@ sigma = st.sidebar.slider(
 reference = None
 
 if source == "Demo image":
+    if source == "Demo image":
     reference, noisy = create_demo_image()
 
 elif source == "Medical sample images":
@@ -62,22 +63,13 @@ elif source == "Medical sample images":
         ) / 255.0
 
         rng = np.random.default_rng(42)
-        noise_level = 0.05 + (sigma * 0.04)
+        noise_level = 0.08
 
         noisy = np.clip(
             reference + rng.normal(0, noise_level, reference.shape),
             0, 1
         )
 
-    except FileNotFoundError:
-        st.error("Medical sample image was not found.")
-        st.stop()
-
-noisy = np.clip(
-    reference + rng.normal(0, noise_level, reference.shape),
-    0, 1
-)
-        
     except FileNotFoundError:
         st.error("Medical sample image was not found.")
         st.stop()
@@ -89,6 +81,24 @@ else:
     )
 
     if uploaded is None:
+        st.info("Upload an image to begin.")
+        st.stop()
+
+    noisy = load_image(uploaded)
+
+    ref_file = st.file_uploader(
+        "Optional: upload matching reference image",
+        type=["png", "jpg", "jpeg", "tif", "tiff"]
+    )
+
+    if ref_file is not None:
+        reference = load_image(ref_file)
+
+        if reference.shape != noisy.shape:
+            st.error("Reference and test images must have the same dimensions.")
+            st.stop()
+
+enhanced = gaussian_filter(noisy, sigma=sigma)
         st.info("Upload an image to begin.")
         st.stop()
 
