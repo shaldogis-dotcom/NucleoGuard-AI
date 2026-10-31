@@ -62,11 +62,13 @@ elif source == "Medical sample images":
         ) / 255.0
 
         rng = np.random.default_rng(42)
-        noisy = np.clip(
-            reference + rng.normal(0, 0.08, reference.shape),
-            0, 1
-        )
+noise_level = 0.05 + (sigma * 0.04)
 
+noisy = np.clip(
+    reference + rng.normal(0, noise_level, reference.shape),
+    0, 1
+)
+        
     except FileNotFoundError:
         st.error("Medical sample image was not found.")
         st.stop()
