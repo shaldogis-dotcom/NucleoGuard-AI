@@ -57,12 +57,21 @@ if source == "Demo image":
 elif source == "Medical sample images":
     try:
         reference = np.asarray(
-           Image.open("FBP_Iter_single.jpg") .convert("L"),
+            Image.open("FBP_Iter_single.jpg").convert("L"),
             dtype=float
         ) / 255.0
 
         rng = np.random.default_rng(42)
-noise_level = 0.05 + (sigma * 0.04)
+        noise_level = 0.05 + (sigma * 0.04)
+
+        noisy = np.clip(
+            reference + rng.normal(0, noise_level, reference.shape),
+            0, 1
+        )
+
+    except FileNotFoundError:
+        st.error("Medical sample image was not found.")
+        st.stop()
 
 noisy = np.clip(
     reference + rng.normal(0, noise_level, reference.shape),
