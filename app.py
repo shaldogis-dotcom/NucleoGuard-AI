@@ -134,7 +134,7 @@ elif source == "Medical sample images":
         st.error("Medical sample image was not found.")
         st.stop()
 
-else:
+elif source == "Upload image":
     uploaded = st.file_uploader(
         "Upload a grayscale image",
         type=["png", "jpg", "jpeg", "tif", "tiff"]
@@ -145,6 +145,7 @@ else:
         st.stop()
 
     noisy = load_image(uploaded)
+    reference = None
 
     ref_file = st.file_uploader(
         "Optional: upload matching reference image",
@@ -159,6 +160,36 @@ else:
                 "Reference and test images must have the same dimensions."
             )
             st.stop()
+
+elif source == "Upload DICOM":
+    dicom_file = st.file_uploader(
+        "Upload a single DICOM image",
+        type=None
+    )
+
+    if dicom_file is None:
+        st.info("Upload a DICOM file to begin.")
+        st.stop()
+
+    try:
+        raw_image, noisy, metadata = load_dicom(dicom_file)
+        reference = None
+
+        st.success("DICOM image loaded successfully!")
+
+        st.subheader("DICOM Information")
+
+        for key, value in metadata.items():
+            st.write(f"**{key}:** {value}")
+
+        st.info(
+            "Image processing uses normalized display values. "
+            "This is not a calibrated SUV measurement."
+        )
+
+    except Exception as e:
+        st.error(f"Could not read this DICOM file: {e}")
+        st.stop()
 
 # Apply denoising
 enhanced = gaussian_filter(noisy, sigma=sigma)
