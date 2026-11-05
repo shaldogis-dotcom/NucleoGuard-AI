@@ -49,6 +49,47 @@ def load_image(upload):
     )
     return arr / 255.0
 
+def load_dicom(upload):
+    ds = pydicom.dcmread(upload)
+
+    if not hasattr(ds, "PixelData"):
+        raise ValueError("This DICOM file does not contain image pixels.")
+
+    pixel_array = ds.pixel_array
+
+    if pixel_array.ndim != 2:
+        raise ValueError(
+            "Please upload a single-frame, 2D DICOM image for this first test."
+        )
+
+    # Apply modality rescale/LUT when available
+    image = apply_modality_lut(pixel_array, ds)
+    image = np.asarray(image, dtype=np.float32)
+
+    if not np.all(np.isfinite(image)):
+        raise ValueError("DICOM image contains invalid pixel values.")
+
+    low, high = np.percentile(image, [1, 99])
+
+    if high <= low:
+        raise ValueError("DICOM image has no usable intensity range.")
+
+    display_image = np.clip(
+        (image - low) / (high - low),
+        0,
+        1
+    )
+
+    metadata = {
+        "Modality": str(getattr(ds, "Modality", "Unknown")),
+        "Rows": int(ds.Rows),
+        "Columns": int(ds.Columns),
+        "Pixel Spacing": str(getattr(ds, "PixelSpacing", "Not available")),
+        "Units": str(getattr(ds, "Units", "Not available"))
+    }
+
+    return image, display_image, metadata
+
 
 def calculate_metrics(ref, candidate):
     mae = np.mean(np.abs(ref - candidate))
