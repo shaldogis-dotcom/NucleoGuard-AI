@@ -101,10 +101,9 @@ def calculate_metrics(ref, candidate):
 st.sidebar.header("Settings")
 
 source = st.sidebar.radio(
-    "Image source",
-    ["Demo image", "Medical sample images", "Upload image"]
+    "Choose image source",
+    ["Demo image", "Medical sample images", "Upload image", "Upload DICOM"]
 )
-
 sigma = st.sidebar.slider(
     "Denoising strength",
     0.3, 3.0, 1.2, 0.1
