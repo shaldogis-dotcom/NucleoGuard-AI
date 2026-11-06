@@ -61,7 +61,72 @@ def load_dicom(upload):
         raise ValueError(
             "Please upload a single-frame, 2D DICOM image for this first test."
         )
+def load_dicom_series(uploaded_files):
 
+    slices = []
+
+    for uploaded_file in uploaded_files:
+        ds = pydicom.dcmread(uploaded_file)
+
+        if not hasattr(ds, "PixelData"):
+            continue
+
+        pixel_array = ds.pixel_array
+
+        if pixel_array.ndim != 2:
+            continue
+
+        image = apply_modality_lut(pixel_array, ds)
+        image = np.asarray(image, dtype=np.float32)
+
+        if not np.all(np.isfinite(image)):
+            continue
+
+        position = getattr(ds, "ImagePositionPatient", None)
+
+        if position is not None:
+            sort_position = float(position[2])
+        else:
+            sort_position = float(
+                getattr(ds, "InstanceNumber", len(slices))
+            )
+
+        slices.append((sort_position, image, ds))
+
+    if len(slices) == 0:
+        raise ValueError("No valid DICOM image slices were found.")
+
+    slices.sort(key=lambda item: item[0])
+
+    shapes = [item[1].shape for item in slices]
+
+    if len(set(shapes)) != 1:
+        raise ValueError("DICOM slices have different image dimensions.")
+
+    volume = np.stack([item[1] for item in slices])
+
+    low, high = np.percentile(volume, [1, 99])
+
+    if high <= low:
+        raise ValueError("DICOM volume has no usable intensity range.")
+
+    display_volume = np.clip(
+        (volume - low) / (high - low),
+        0,
+        1
+    )
+
+    first_ds = slices[0][2]
+
+    metadata = {
+        "Modality": str(getattr(first_ds, "Modality", "Unknown")),
+        "Number of slices": len(slices),
+        "Rows": int(first_ds.Rows),
+        "Columns": int(first_ds.Columns),
+        "Units": str(getattr(first_ds, "Units", "Not available"))
+    }
+
+    return volume, display_volume, metadata
     # Apply modality rescale/LUT when available
     image = apply_modality_lut(pixel_array, ds)
     image = np.asarray(image, dtype=np.float32)
