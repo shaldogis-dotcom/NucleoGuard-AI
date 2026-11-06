@@ -331,6 +331,7 @@ col2.metric(
     f"{snr_after:.2f} dB",
     delta=f"{snr_after - snr_before:+.2f} dB"
 )
+
 change_map = np.abs(noisy - enhanced)
 
 # PET Image Visualization
