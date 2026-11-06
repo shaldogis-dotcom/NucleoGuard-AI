@@ -172,6 +172,15 @@ def calculate_snr(image):
     return 20 * np.log10(
         max(abs(signal), 1e-12) / noise
     )
+    
+def calculate_edge_strength(image):
+
+    edge_x = sobel(image, axis=1)
+    edge_y = sobel(image, axis=0)
+
+    edge_magnitude = np.hypot(edge_x, edge_y)
+
+    return float(np.mean(edge_magnitude))
 st.sidebar.header("Settings")
 
 source = st.sidebar.radio(
