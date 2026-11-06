@@ -334,6 +334,10 @@ col2.metric(
 
 change_map = np.abs(noisy - enhanced)
 
+vmax = max(
+    float(np.percentile(change_map, 99)),
+    1e-6
+)
 # PET Image Visualization
 
 st.header("PET Image Enhancement Results")
@@ -362,10 +366,6 @@ fig.colorbar(im, ax=axes[2], fraction=0.046, pad=0.04)
 fig.tight_layout()
 st.pyplot(fig)
 plt.close(fig)
-vmax = max(
-    float(np.percentile(change_map, 99)),
-    1e-6
-)
 
 threshold = float(np.percentile(change_map, 95))
 high_change = change_map >= threshold
