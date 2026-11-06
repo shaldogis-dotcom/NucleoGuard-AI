@@ -312,6 +312,25 @@ st.write(
     float(np.mean(np.abs(noisy - enhanced)))
 )
 
+# Experimental SNR comparison
+
+snr_before = calculate_snr(noisy)
+snr_after = calculate_snr(enhanced)
+
+st.subheader("Experimental Image Quality Indicators")
+
+col1, col2 = st.columns(2)
+
+col1.metric(
+    "SNR Before",
+    f"{snr_before:.2f} dB"
+)
+
+col2.metric(
+    "SNR After",
+    f"{snr_after:.2f} dB",
+    delta=f"{snr_after - snr_before:+.2f} dB"
+)
 change_map = np.abs(noisy - enhanced)
 
 # PET Image Visualization
