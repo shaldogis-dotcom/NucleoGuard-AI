@@ -12,7 +12,6 @@ st.set_page_config(
 )
 
 st.title("🛡️ NucleoGuard AI")
-st.info(f"Current Imaging Modality: {modality}")
 st.subheader("Nuclear Medicine Image Quality Assistant")
 st.warning(
     "Research prototype only — not validated for clinical diagnosis."
