@@ -341,6 +341,34 @@ col2.metric(
     delta=f"{snr_after - snr_before:+.2f} dB"
 )
 
+# Edge Preservation Analysis
+
+edge_before = calculate_edge_strength(noisy)
+edge_after = calculate_edge_strength(enhanced)
+
+edge_change = (
+    (edge_after - edge_before) /
+    max(edge_before, 1e-12)
+) * 100
+
+st.subheader("Edge Preservation Analysis")
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
+    "Edge Strength Before",
+    f"{edge_before:.4f}"
+)
+
+col2.metric(
+    "Edge Strength After",
+    f"{edge_after:.4f}"
+)
+
+col3.metric(
+    "Edge Change",
+    f"{edge_change:+.2f}%"
+)
 change_map = np.abs(noisy - enhanced)
 
 vmax = max(
