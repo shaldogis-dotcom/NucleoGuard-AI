@@ -162,7 +162,16 @@ def calculate_metrics(ref, candidate):
     psnr = 10 * np.log10(1.0 / max(mse, 1e-12))
     return mae, mse, psnr
 
+def calculate_snr(image):
+    signal = float(np.mean(image))
+    noise = float(np.std(image))
 
+    if noise == 0:
+        return float("inf")
+
+    return 20 * np.log10(
+        max(abs(signal), 1e-12) / noise
+    )
 st.sidebar.header("Settings")
 
 source = st.sidebar.radio(
