@@ -305,6 +305,34 @@ st.write(
 
 change_map = np.abs(noisy - enhanced)
 
+# PET Image Visualization
+
+st.header("PET Image Enhancement Results")
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+axes[0].imshow(noisy, cmap="gray", vmin=0, vmax=1)
+axes[0].set_title("Original PET Image")
+
+axes[1].imshow(enhanced, cmap="gray", vmin=0, vmax=1)
+axes[1].set_title("Enhanced PET Image")
+
+im = axes[2].imshow(
+    change_map,
+    cmap="hot",
+    vmin=0,
+    vmax=vmax
+)
+axes[2].set_title("Difference Map")
+
+for ax in axes:
+    ax.axis("off")
+
+fig.colorbar(im, ax=axes[2], fraction=0.046, pad=0.04)
+
+fig.tight_layout()
+st.pyplot(fig)
+plt.close(fig)
 vmax = max(
     float(np.percentile(change_map, 99)),
     1e-6
