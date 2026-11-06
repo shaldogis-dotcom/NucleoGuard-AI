@@ -389,6 +389,7 @@ report = f"""
 NUCLEOGUARD AI
 Image Quality Analysis Report
 
+Imaging Modality: {modality}
 Denoising Strength: {sigma}
 
 SNR Before: {snr_before:.4f}
