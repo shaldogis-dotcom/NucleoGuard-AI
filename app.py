@@ -3,7 +3,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage import gaussian_filter, sobel
 from scipy.ndimage import gaussian_filter
 st.set_page_config(
     page_title="NucleoGuard AI",
