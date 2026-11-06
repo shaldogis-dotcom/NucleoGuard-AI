@@ -192,6 +192,10 @@ sigma = st.sidebar.slider(
     0.3, 3.0, 1.2, 0.1
 )
 
+modality = st.sidebar.selectbox(
+    "Imaging Modality",
+    ["PET", "SPECT"]
+)
 reference = None
 
 if source == "Demo image":
