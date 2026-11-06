@@ -199,11 +199,49 @@ elif source == "Medical sample images":
         st.error("Medical sample image was not found.")
         st.stop()
 
-elif source == "Upload image":
-    uploaded = st.file_uploader(
-        "Upload a grayscale image",
-        type=["png", "jpg", "jpeg", "tif", "tiff"]
+elif source == "Upload DICOM":
+
+    dicom_files = st.file_uploader(
+        "Upload PET DICOM slices",
+        type=None,
+        accept_multiple_files=True
     )
+
+    if not dicom_files:
+        st.info("Upload DICOM files to begin.")
+        st.stop()
+
+    try:
+        raw_volume, display_volume, metadata = load_dicom_series(
+            dicom_files
+        )
+
+        reference = None
+
+        st.success("DICOM series loaded successfully!")
+
+        st.subheader("DICOM Study Information")
+
+        for key, value in metadata.items():
+            st.write(f"**{key}:** {value}")
+
+        slice_index = st.slider(
+            "Select PET slice",
+            min_value=0,
+            max_value=display_volume.shape[0] - 1,
+            value=display_volume.shape[0] // 2
+        )
+
+        noisy = display_volume[slice_index]
+
+        st.info(
+            "The displayed image uses normalized values. "
+            "It is not a calibrated SUV measurement."
+        )
+
+    except Exception as e:
+        st.error(f"Could not read DICOM series: {e}")
+        st.stop()
 
     if uploaded is None:
         st.info("Upload an image to begin.")
