@@ -11,7 +11,12 @@ st.set_page_config(
     layout="wide"
 )
 
+modality = st.sidebar.selectbox(
+    "Imaging Modality",
+    ["PET", "SPECT"]
+)
 st.title("🛡️ NucleoGuard AI")
+st.info(f"Current Imaging Modality: {modality}")
 st.subheader("Nuclear Medicine Image Quality Assistant")
 st.warning(
     "Research prototype only — not validated for clinical diagnosis."
@@ -192,10 +197,6 @@ sigma = st.sidebar.slider(
     0.3, 3.0, 1.2, 0.1
 )
 
-modality = st.sidebar.selectbox(
-    "Imaging Modality",
-    ["PET", "SPECT"]
-)
 reference = None
 
 if source == "Demo image":
