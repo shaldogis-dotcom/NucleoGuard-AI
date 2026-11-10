@@ -177,7 +177,24 @@ def calculate_snr(image):
     return 20 * np.log10(
         max(abs(signal), 1e-12) / noise
     )
-    
+
+
+def calculate_total_counts(image):
+    return float(np.sum(image))
+
+
+def calculate_pixel_counts(image):
+    return image
+
+
+def calculate_roi_counts(image, x, y, roi_size=20):
+    roi = image[
+        y:y + roi_size,
+        x:x + roi_size
+    ]
+
+    return float(np.sum(roi))
+
 def calculate_edge_strength(image):
 
     edge_x = sobel(image, axis=1)
